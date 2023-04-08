@@ -3,11 +3,15 @@
 # Features
 
 - react-hook with built-in recaptcha-v2
-- Corresponding to checkbox and INVISIBLE.
+- Corresponding to checkbox and invisible.
 
 # Requirement
 
 - Node.js: v18.13.0
+
+# Depends on
+
+- react: 18.2.0
 
 # Usage
 
