@@ -1,1 +1,1 @@
-export { useRecaptchaV2 } from './useRecaptchaV2';
+export { useRecaptchaV2 } from './useRecaptchaV2.js';
