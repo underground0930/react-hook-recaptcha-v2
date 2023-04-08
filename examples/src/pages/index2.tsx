@@ -3,29 +3,28 @@ import { useRecaptchaV2 } from 'react-hook-recaptcha-v2'
 
 const targetId = 'rechapchaTarget'
 const scriptId = 'rechapchaScriptId'
-const sitekey = process.env.NEXT_PUBLIC_RECAPTCHA_V2_CHECKBOX_SITE_KEY as string
+const sitekey = process.env.NEXT_PUBLIC_RECAPTCHA_V2_HIDDEN_SITE_KEY as string
 
 export default function Home() {
-  const { recaptchaRef, recaptchaToken } = useRecaptchaV2({
+  const { recaptchaRef, recaptchaToken, executeRecaptcha } = useRecaptchaV2({
     sitekey,
     targetId,
     scriptId,
-    size: 'compact',
-    hl: 'en',
+    size: 'invisible',
   })
   const [result, setResult] = useState<string>('')
 
   const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     const { username } = event.currentTarget
-
+    await executeRecaptcha()
+    console.log(recaptchaToken)
     await fetch('/api/contact', {
       method: 'POST',
       headers: { 'Content-type': 'application/json' },
       body: JSON.stringify({
         username: username.value,
         token: recaptchaToken,
-        type: 'checkbox',
       }),
     })
       .then((response) => {
@@ -40,7 +39,7 @@ export default function Home() {
 
   return (
     <div className='p-10'>
-      <h1 className='font-bold text-3xl mb-5'>FORM EXAMPLE (CHECKBOX ver)</h1>
+      <h1 className='font-bold text-3xl mb-5'>FORM EXAMPLE (HIDDEN ver)</h1>
       <h2 className='font-bold text-2xl mb-5'>【result】→ {result}</h2>
       <form onSubmit={onSubmit}>
         <div className='mb-4'>
@@ -51,9 +50,7 @@ export default function Home() {
         </div>
         <div className='mb-4'>【token】{recaptchaToken}</div>
         <div>
-          <button disabled={!recaptchaToken} className='bg-white text-stone-950 p-2 disabled:opacity-25'>
-            送信
-          </button>
+          <button className='bg-white text-stone-950 p-2 disabled:opacity-25'>送信</button>
         </div>
       </form>
     </div>

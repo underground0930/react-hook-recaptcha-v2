@@ -16,6 +16,7 @@ export type UseRecaptchaResult = {
   recaptchaRef: React.MutableRefObject<HTMLDivElement | null>
   recaptchaToken: string | null
   resetRecaptcha: () => void
+  executeRecaptcha: () => Promise<void>
 }
 
 export const useRecaptchaV2 = ({
@@ -90,6 +91,16 @@ export const useRecaptchaV2 = ({
     }
   }
 
+  const executeRecaptcha = async () => {
+    if (window.grecaptcha && recaptchaInstance !== null) {
+      try {
+        await window.grecaptcha.execute(recaptchaInstance)
+      } catch (e) {
+        console.error(e)
+      }
+    }
+  }
+
   useEffect(() => {
     if (!window.grecaptcha) {
       loadRecaptchaScript()
@@ -98,5 +109,5 @@ export const useRecaptchaV2 = ({
     }
   }, [renderRecaptcha])
 
-  return { recaptchaRef, recaptchaToken, resetRecaptcha }
+  return { recaptchaRef, recaptchaToken, resetRecaptcha, executeRecaptcha }
 }

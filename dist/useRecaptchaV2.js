@@ -52,6 +52,16 @@ export const useRecaptchaV2 = ({ sitekey, targetId, size, scriptId = 'recaptchaA
             window.grecaptcha.reset(recaptchaInstance);
         }
     };
+    const executeRecaptcha = async () => {
+        if (window.grecaptcha && recaptchaInstance !== null) {
+            try {
+                await window.grecaptcha.execute(recaptchaInstance);
+            }
+            catch (e) {
+                console.error(e);
+            }
+        }
+    };
     useEffect(() => {
         if (!window.grecaptcha) {
             loadRecaptchaScript();
@@ -60,5 +70,5 @@ export const useRecaptchaV2 = ({ sitekey, targetId, size, scriptId = 'recaptchaA
             window.grecaptcha.ready(renderRecaptcha);
         }
     }, [renderRecaptcha]);
-    return { recaptchaRef, recaptchaToken, resetRecaptcha };
+    return { recaptchaRef, recaptchaToken, resetRecaptcha, executeRecaptcha };
 };

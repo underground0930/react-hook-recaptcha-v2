@@ -15,5 +15,6 @@ export type UseRecaptchaResult = {
     recaptchaRef: React.MutableRefObject<HTMLDivElement | null>;
     recaptchaToken: string | null;
     resetRecaptcha: () => void;
+    executeRecaptcha: () => Promise<void>;
 };
 export declare const useRecaptchaV2: ({ sitekey, targetId, size, scriptId, hl, badge, callback, expiredCallback, errorCallback, }: Props) => UseRecaptchaResult;
