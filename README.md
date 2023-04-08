@@ -5,6 +5,13 @@
 - react-hook with built-in recaptcha-v2
 - Corresponding to checkbox and invisible.
 
+# Install
+
+```bash
+npm i react-hook-recaptcha-v2
+```
+
+
 # Requirement
 
 - Node.js: v18.13.0
