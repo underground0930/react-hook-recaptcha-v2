@@ -1,30 +1,35 @@
 import { useState } from 'react'
 import { useRecaptchaV2 } from 'react-hook-recaptcha-v2'
 
-const targetId = 'rechapchaTarget'
 const scriptId = 'rechapchaScriptId'
 const sitekey = process.env.NEXT_PUBLIC_RECAPTCHA_V2_CHECKBOX_SITE_KEY as string
 
 export default function Home() {
-  const { recaptchaRef, recaptchaToken } = useRecaptchaV2({
+  const [token, setToken] = useState<string | null>(null)
+  const [result, setResult] = useState<string>('')
+
+  const { recaptchaRef } = useRecaptchaV2({
     sitekey,
-    targetId,
     scriptId,
     size: 'compact',
     hl: 'en',
+    callback: (token) => setToken(token),
+    expiredCallback: () => setToken(null),
+    errorCallback: () => {
+      alert('recapcha error')
+      setToken(null)
+    },
   })
-  const [result, setResult] = useState<string>('')
 
   const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    const { username } = event.currentTarget
-
+    if (!token) return
     await fetch('/api/contact', {
       method: 'POST',
       headers: { 'Content-type': 'application/json' },
       body: JSON.stringify({
-        username: username.value,
-        token: recaptchaToken,
+        username: event.currentTarget.username.value,
+        token,
         type: 'checkbox',
       }),
     })
@@ -34,7 +39,13 @@ export default function Home() {
         }
         throw Error('response error')
       })
-      .then(({ result }) => setResult(result))
+      .then(({ result }) => {
+        if (result === 'success') {
+          location.href = '/thanks'
+          return
+        }
+        setResult(result)
+      })
       .catch((error) => setResult(error.message))
   }
 
@@ -47,11 +58,11 @@ export default function Home() {
           <input className='text-stone-950' type='text' name='username' placeholder='username' />
         </div>
         <div className='mb-4'>
-          <div id={targetId} ref={recaptchaRef}></div>
+          <div ref={recaptchaRef}></div>
         </div>
-        <div className='mb-4'>【token】{recaptchaToken}</div>
+        <div className='mb-4'>【token】{token}</div>
         <div>
-          <button disabled={!recaptchaToken} className='bg-white text-stone-950 p-2 disabled:opacity-25'>
+          <button disabled={!token} className='bg-white text-stone-950 p-2 disabled:opacity-25'>
             送信
           </button>
         </div>

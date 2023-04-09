@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-export const useRecaptchaV2 = ({ sitekey, targetId, size, scriptId = 'recaptchaApiScript', hl = 'ja', badge = 'bottomright', callback, expiredCallback, errorCallback, }) => {
+export const useRecaptchaV2 = ({ sitekey, size, scriptId = 'recaptchaApiScript', hl = 'ja', badge = 'bottomright', callback, expiredCallback, errorCallback, }) => {
     const recaptchaRef = useRef(null);
-    const [recaptchaToken, setRecaptchaToken] = useState(null);
-    const [recaptchaInstance, setRecaptchaInstance] = useState(null);
+    const [recaptchaId, setRecaptchaId] = useState(null);
     const loadRecaptchaScript = () => {
         if (document.getElementById(scriptId))
             return;
@@ -22,40 +21,28 @@ export const useRecaptchaV2 = ({ sitekey, targetId, size, scriptId = 'recaptchaA
         if (!window.grecaptcha || typeof window.grecaptcha?.render !== 'function') {
             return;
         }
-        const target = document.getElementById(targetId);
+        const { current } = recaptchaRef;
         // stop reRender
-        if (target && target.innerHTML !== '')
+        if (current && current.innerHTML !== '')
             return;
-        setRecaptchaInstance(window.grecaptcha.render(recaptchaRef.current, {
+        setRecaptchaId(window.grecaptcha.render(current, {
             sitekey,
             size,
             badge,
-            callback: (token) => {
-                setRecaptchaToken(token);
-                callback?.();
-            },
-            'expired-callback': () => {
-                setRecaptchaToken(null);
-                expiredCallback?.();
-            },
-            'error-callback': () => {
-                setRecaptchaToken(null);
-                errorCallback?.();
-            },
+            callback,
+            'expired-callback': expiredCallback,
+            'error-callback': errorCallback,
         }));
-        return () => {
-            resetRecaptcha();
-        };
-    }, [recaptchaInstance]);
+    }, [recaptchaId]);
     const resetRecaptcha = () => {
-        if (window.grecaptcha && recaptchaInstance !== null) {
-            window.grecaptcha.reset(recaptchaInstance);
+        if (window.grecaptcha && recaptchaId !== null) {
+            window.grecaptcha.reset(recaptchaId);
         }
     };
     const executeRecaptcha = async () => {
-        if (window.grecaptcha && recaptchaInstance !== null) {
+        if (window.grecaptcha && recaptchaId !== null) {
             try {
-                await window.grecaptcha.execute(recaptchaInstance);
+                await window.grecaptcha.execute(recaptchaId);
             }
             catch (e) {
                 console.error(e);
@@ -69,6 +56,9 @@ export const useRecaptchaV2 = ({ sitekey, targetId, size, scriptId = 'recaptchaA
         else {
             window.grecaptcha.ready(renderRecaptcha);
         }
+        return () => {
+            resetRecaptcha();
+        };
     }, [renderRecaptcha]);
-    return { recaptchaRef, recaptchaToken, resetRecaptcha, executeRecaptcha };
+    return { recaptchaRef, resetRecaptcha, executeRecaptcha };
 };
