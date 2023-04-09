@@ -1,1 +1,1 @@
-export { Props, UseRecaptchaResult, useRecaptchaV2 } from './useRecaptchaV2.js'
+export { Options, UseRecaptchaResult, useRecaptchaV2 } from './useRecaptchaV2.js'

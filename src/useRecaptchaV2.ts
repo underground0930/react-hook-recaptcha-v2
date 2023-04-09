@@ -1,27 +1,24 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
-export type Props = {
+export type Options = {
   sitekey: string
-  targetId: string
   scriptId?: string
   hl?: string
   size?: ReCaptchaV2.Size
   badge?: ReCaptchaV2.Badge
-  callback?: () => void
+  callback: (token: string | null) => void
   expiredCallback?: () => void
   errorCallback?: () => void
 }
 
 export type UseRecaptchaResult = {
   recaptchaRef: React.MutableRefObject<HTMLDivElement | null>
-  recaptchaToken: string | null
   resetRecaptcha: () => void
   executeRecaptcha: () => Promise<void>
 }
 
 export const useRecaptchaV2 = ({
   sitekey,
-  targetId,
   size,
   scriptId = 'recaptchaApiScript',
   hl = 'ja',
@@ -29,10 +26,9 @@ export const useRecaptchaV2 = ({
   callback,
   expiredCallback,
   errorCallback,
-}: Props): UseRecaptchaResult => {
+}: Options): UseRecaptchaResult => {
   const recaptchaRef = useRef<HTMLDivElement>(null)
-  const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null)
-  const [recaptchaInstance, setRecaptchaInstance] = useState<number | null>(null)
+  const [recaptchaId, setRecaptchaId] = useState<number | null>(null)
 
   const loadRecaptchaScript = () => {
     if (document.getElementById(scriptId)) return
@@ -54,47 +50,33 @@ export const useRecaptchaV2 = ({
     if (!window.grecaptcha || typeof window.grecaptcha?.render !== 'function') {
       return
     }
-
-    const target = document.getElementById(targetId)
+    const { current } = recaptchaRef
 
     // stop reRender
-    if (target && target.innerHTML !== '') return
+    if (current && current.innerHTML !== '') return
 
-    setRecaptchaInstance(
-      window.grecaptcha.render(recaptchaRef.current as HTMLElement, {
+    setRecaptchaId(
+      window.grecaptcha.render(current as HTMLElement, {
         sitekey,
         size,
         badge,
-        callback: (token: string) => {
-          setRecaptchaToken(token)
-          callback?.()
-        },
-        'expired-callback': () => {
-          setRecaptchaToken(null)
-          expiredCallback?.()
-        },
-        'error-callback': () => {
-          setRecaptchaToken(null)
-          errorCallback?.()
-        },
+        callback,
+        'expired-callback': expiredCallback,
+        'error-callback': errorCallback,
       }),
     )
-
-    return () => {
-      resetRecaptcha()
-    }
-  }, [recaptchaInstance])
+  }, [recaptchaId])
 
   const resetRecaptcha = () => {
-    if (window.grecaptcha && recaptchaInstance !== null) {
-      window.grecaptcha.reset(recaptchaInstance)
+    if (window.grecaptcha && recaptchaId !== null) {
+      window.grecaptcha.reset(recaptchaId)
     }
   }
 
   const executeRecaptcha = async () => {
-    if (window.grecaptcha && recaptchaInstance !== null) {
+    if (window.grecaptcha && recaptchaId !== null) {
       try {
-        await window.grecaptcha.execute(recaptchaInstance)
+        await window.grecaptcha.execute(recaptchaId)
       } catch (e) {
         console.error(e)
       }
@@ -107,7 +89,10 @@ export const useRecaptchaV2 = ({
     } else {
       window.grecaptcha.ready(renderRecaptcha)
     }
+    return () => {
+      resetRecaptcha()
+    }
   }, [renderRecaptcha])
 
-  return { recaptchaRef, recaptchaToken, resetRecaptcha, executeRecaptcha }
+  return { recaptchaRef, resetRecaptcha, executeRecaptcha }
 }
